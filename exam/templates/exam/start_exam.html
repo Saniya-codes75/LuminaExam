@@ -1,0 +1,215 @@
+{% extends 'exam/base.html' %}
+{% block content %}
+
+<style>
+    /* Professional Styles preserved for your layout */
+    .palette-box {
+        width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; border-radius: 5px; font-weight: bold; border: 1px solid #ddd;
+    }
+    .not-visited { background-color: #f8f9fa; color: #333; }
+    .visited { background-color: #dc3545; color: white; border-color: #dc3545; }
+    .answered { background-color: #28a745; color: white; border-color: #28a745; }
+    .active-q { border: 2px solid #007bff; transform: scale(1.1); box-shadow: 0 0 5px rgba(0,123,255,0.5); }
+    
+    .progress { height: 10px; border-radius: 5px; }
+    .question-block { min-height: 250px; }
+    .options-container label { cursor: pointer; width: 100%; display: block; }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 d-flex justify-content-between align-items-center mb-3 bg-white p-3 shadow-sm rounded">
+            <h4 class="mb-0 text-primary">{{ exam.title }}</h4>
+            <div class="alert alert-warning mb-0 py-1 px-4">
+                ⏳ Time Remaining: <span id="timer" class="fw-bold">0:00</span>
+            </div>
+        </div>
+
+        <div class="col-12 mb-4">
+            <div class="progress">
+                <div id="examProgress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <form method="POST" id="examForm">
+                {% csrf_token %}
+                {% for question in questions %}
+                    <div class="card mb-3 p-4 question-block shadow-sm" id="q-div-{{ forloop.counter }}" data-question-id="{{ question.id }}" style="display: none;">
+                        <h5 class="text-muted mb-4 small">QUESTION {{ forloop.counter }} OF {{ questions.count }}</h5>
+                        <p class="h5 mb-4"><strong>{{ question.question_text }}</strong></p>
+
+                        <div class="options-container">
+                            {% for i in "1234" %}
+                                <div class="mb-2 p-2 border rounded">
+                                    <input type="radio" name="question_{{ question.id }}" value="{{ i }}" id="q{{question.id}}_{{ i }}" onchange="markPalette('{{ forloop.parentloop.counter }}')"> 
+                                    <label for="q{{question.id}}_{{ i }}" class="ms-2">
+                                        {% if i == "1" %}{{ question.option1 }}{% elif i == "2" %}{{ question.option2 }}{% elif i == "3" %}{{ question.option3 }}{% else %}{{ question.option4 }}{% endif %}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-between p-3 bg-light rounded shadow-sm">
+                    <button type="button" class="btn btn-outline-secondary px-4" id="prevBtn" onclick="move(-1)">Previous</button>
+                    <div>
+                        <button type="button" class="btn btn-primary px-4 me-2" id="nextBtn" onclick="move(1)">Next</button>
+                        <button type="submit" class="btn btn-success px-4" id="manualSubmitBtn">Submit Exam</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white fw-bold">Question Palette</div>
+                <div class="card-body text-center">
+                    <div class="d-flex flex-wrap gap-2 mb-4 justify-content-center">
+                        {% for i in questions %}
+                            <div class="palette-box not-visited" id="pal-{{ forloop.counter }}" onclick="jump('{{ forloop.counter }}')">
+                                {{ forloop.counter }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="button" class="btn btn-danger btn-block fw-bold shadow-sm" onclick="triggerFinalSubmit()">
+                            🏁 FINAL SUBMIT EXAM
+                        </button>
+                    </div>
+
+                    <hr>
+                    <div class="text-start small">
+                        <div class="d-flex align-items-center mb-1"><div class="palette-box answered me-2" style="width:15px;height:15px;"></div> Answered</div>
+                        <div class="d-flex align-items-center mb-1"><div class="palette-box visited me-2" style="width:15px;height:15px;"></div> Visited / Current</div>
+                        <div class="d-flex align-items-center"><div class="palette-box not-visited me-2" style="width:15px;height:15px;"></div> Not Visited</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- PART 1: INITIALIZATION ---
+    let timeValue = "{{ remaining_time|default:60 }}";
+    let secondsLeft = parseInt(timeValue);
+    const timerDisplay = document.getElementById("timer");
+    const examForm = document.getElementById("examForm");
+    let forceSubmit = false; 
+    let currentPos = 1;
+    const totalQ = parseInt("{{ questions.count }}");
+    const storageKey = "exam_end_time_{{ exam.id }}";
+
+    // --- PART 2: PERSISTENT TIMER (REFRESH-PROOF) ---
+    if (timerDisplay && examForm) {
+        let examEndTime = localStorage.getItem(storageKey);
+
+        if (examEndTime) {
+            examEndTime = parseInt(examEndTime);
+        } else {
+            examEndTime = Date.now() + (secondsLeft * 1000);
+            localStorage.setItem(storageKey, examEndTime);
+        }
+
+        const runningTimer = setInterval(function() {
+            const now = Date.now();
+            const remaining = Math.max(0, Math.floor((examEndTime - now) / 1000));
+            
+            let mins = Math.floor(remaining / 60);
+            let secs = remaining % 60;
+            timerDisplay.innerText = mins + ":" + (secs < 10 ? "0" : "") + secs;
+            
+            if (remaining <= 0) {
+                clearInterval(runningTimer);
+                localStorage.removeItem(storageKey);
+                forceSubmit = true; 
+                alert("Time is up! Submitting automatically.");
+                examForm.submit();
+            }
+        }, 1000);
+    }
+
+    // --- PART 3: SMART VALIDATION ---
+    examForm.addEventListener('submit', function(e) {
+        if (!forceSubmit) {
+            const questions = document.querySelectorAll('.question-block');
+            let allAnswered = true;
+            let firstUnanswered = null;
+
+            questions.forEach((block) => {
+                const qId = block.getAttribute('data-question-id');
+                const radioChecked = block.querySelector(`input[name="question_${qId}"]:checked`);
+                if (!radioChecked) {
+                    allAnswered = false;
+                    block.style.border = "2px solid #dc3545"; 
+                    if (!firstUnanswered) firstUnanswered = block;
+                } else {
+                    block.style.border = "1px solid rgba(0,0,0,.125)"; 
+                }
+            });
+
+            if (!allAnswered) {
+                e.preventDefault(); 
+                alert("Please answer all questions before submitting. Use the Red 'Final Submit' button if you wish to finish early with unanswered questions.");
+                const qNo = firstUnanswered.id.split('-')[2];
+                jump(qNo);
+            } else {
+                localStorage.removeItem(storageKey);
+            }
+        } else {
+            localStorage.removeItem(storageKey);
+        }
+    });
+
+    // --- PART 4: TAB SWITCH / MINIMIZE DETECTION ---
+    document.addEventListener("visibilitychange", function() {
+        if (document.hidden && !forceSubmit) {
+            forceSubmit = true; 
+            alert("SECURITY VIOLATION: Tab switching/minimizing detected. Exam submitted.");
+            examForm.submit();
+        }
+    });
+
+    // --- PART 5: NAVIGATION & PALETTE ---
+    function render(n) {
+        currentPos = parseInt(n);
+        document.querySelectorAll('.question-block').forEach(b => b.style.display = 'none');
+        document.getElementById(`q-div-${currentPos}`).style.display = 'block';
+
+        document.querySelectorAll('.palette-box').forEach(p => p.classList.remove('active-q'));
+        let pBox = document.getElementById(`pal-${currentPos}`);
+        pBox.classList.add('active-q');
+        if (!pBox.classList.contains('answered')) pBox.classList.add('visited');
+
+        document.getElementById('prevBtn').style.visibility = (currentPos === 1) ? 'hidden' : 'visible';
+        document.getElementById('nextBtn').style.display = (currentPos === totalQ) ? 'none' : 'inline-block';
+        document.getElementById('manualSubmitBtn').style.display = (currentPos === totalQ) ? 'inline-block' : 'none';
+    }
+
+    function move(step) { render(currentPos + step); }
+    function jump(n) { render(n); }
+
+    function markPalette(n) {
+        let pBox = document.getElementById(`pal-${n}`);
+        pBox.classList.remove('visited', 'not-visited');
+        pBox.classList.add('answered');
+        let ansCount = document.querySelectorAll('.palette-box.answered').length;
+        document.getElementById('examProgress').style.width = (ansCount / totalQ * 100) + "%";
+    }
+
+    function triggerFinalSubmit() {
+        if(confirm("Confirm Final Submission? Unanswered questions will be submitted as blank.")) {
+            forceSubmit = true; 
+            examForm.submit();
+        }
+    }
+
+    render(1);
+    document.addEventListener('contextmenu', event => event.preventDefault());
+</script>
+
+{% endblock %}

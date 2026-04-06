@@ -1,0 +1,78 @@
+{% extends 'exam/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chalkboard-teacher text-primary"></i> Faculty Control Panel</h2>
+        <div class="badge bg-primary p-2">Logged in as: {{ user.username }}</div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-info text-white shadow-sm">
+                <div class="card-body">
+                    <h5>Total Exams</h5>
+                    <h3>{{ exams.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <h5>Active Students</h5>
+                    <h3>{{ student_count }}</h3>
+                    <!-- <h3>{{ total_students|default:"Check Admin" }}</h3> -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between">
+            <h5 class="mb-0">Manage Exams & Questions</h5>
+            <a href="/admin/exam/exam/add/" class="btn btn-sm btn-light">+ Create New Exam</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Exam Title</th>
+                        <th>Total Questions</th>
+                        <th>Passing Marks</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams %}
+                    <tr>
+                        <td><strong>{{ exam.title }}</strong></td>
+                        <td>{{ exam.question_set.count }}</td>
+                        <td>{{ exam.passing_marks }}</td>
+                        <td>
+                        <a href="{% url 'view_exam_results' exam.id %}" class="btn btn-sm btn-info text-white">
+                        <i class="fas fa-poll"></i> view Results
+                        </a>
+
+                        <a href="{% url 'add_question' exam.id %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Add Questions
+                        </a>
+                        </td>
+                       
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center">No exams created yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="card mb-4 border-0 shadow-sm" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+    <div class="card-body row text-center">
+        <div class="col-md-3"><strong>Roll No:</strong> {{ profile.roll_no|default:"---" }}</div>
+        <div class="col-md-3"><strong>Address:</strong> {{ profile.address|default:"Not Provided" }}</div>
+        <div class="col-md-3"><strong>Phone:</strong> {{ profile.phone|default:"N/A" }}</div>
+        <div class="col-md-3"><strong>Designation:</strong> {{ profile.role|capfirst }}</div>
+    </div>
+</div>
+{% endblock %}

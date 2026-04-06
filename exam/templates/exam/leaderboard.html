@@ -1,0 +1,75 @@
+{% extends 'exam/base.html' %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold text-dark">🏆 Exam Leaderboard</h1>
+        <p class="text-muted h5">{{ exam.title }}</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow border-0 rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th class="ps-4 py-3">Rank</th>
+                                <th class="py-3">Student Name</th>
+                                <th class="py-3 text-center">Score</th>
+                                <th class="pe-4 py-3 text-end">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in leaderboard_data %}
+                            <tr class="{% if entry.user == request.user.username %}table-primary fw-bold{% endif %}">
+                                <td class="ps-4">
+                                    {% if entry.rank == 1 %}
+                                        <span class="fs-4">🥇</span>
+                                    {% elif entry.rank == 2 %}
+                                        <span class="fs-4">🥈</span>
+                                    {% elif entry.rank == 3 %}
+                                        <span class="fs-4">🥉</span>
+                                    {% else %}
+                                        <span class="ms-2 text-muted">#{{ entry.rank }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            {{ entry.user|slice:":1"|upper }}
+                                        </div>
+                                        <span>{{ entry.user }}</span>
+                                        {% if entry.user == request.user.username %}
+                                            <span class="badge bg-primary ms-2">You</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border px-3 py-2">{{ entry.score }} / {{ exam.total_marks }}</span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <h6 class="mb-0 text-success fw-bold">{{ entry.percentage }}%</h6>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-info-circle fs-2"></i>
+                                    <p class="mt-2">No attempts recorded for this exam yet.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary px-4">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

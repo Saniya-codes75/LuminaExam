@@ -1,0 +1,95 @@
+{% extends 'exam/base.html' %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold text-dark">Performance Report</h2>
+        <p class="text-muted">Exam: {{ exam.title }} | Date: {{ result.submitted_at|date:"d M Y" }}</p>
+    </div>
+
+    <div class="card shadow border-0 rounded-lg overflow-hidden mb-5">
+        <div class="card-body p-5 text-center">
+            <div class="mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle border border-5 {% if passed %}border-success{% else %}border-danger{% endif %}" style="width: 150px; height: 150px;">
+                    <h1 class="fw-bold mb-0 {% if passed %}text-success{% else %}text-danger{% endif %}">{{ percentage|floatformat:0 }}%</h1>
+                </div>
+            </div>
+            <h3 class="fw-bold mb-4">
+                 Score: <span class="text-primary">{{ result.score }}</span> / {{ exam.total_marks }}
+            </h3>
+
+           
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded shadow-sm border-start border-success border-4">
+                        <h4 class="text-success mb-1">{{ result.correct_answers }}</h4>
+                        <span class="text-muted small fw-bold">CORRECT</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded shadow-sm border-start border-danger border-4">
+                        <h4 class="text-danger mb-1">{{ result.wrong_answers }}</h4>
+                        <span class="text-muted small fw-bold">WRONG</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded shadow-sm border-start {% if passed %}border-success{% else %}border-warning{% endif %} border-4">
+                        <h4 class="{% if passed %}text-success{% else %}text-warning{% endif %} mb-1">{{ result.status|upper }}</h4>
+                        <span class="text-muted small fw-bold">RESULT</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mb-4 d-flex align-items-center">
+        <span class="badge bg-dark me-2">Detailed Review</span> 
+        <small class="text-muted h6 mb-0">Check your mistakes below</small>
+    </h4>
+    
+    {% for ans in user_answers %}
+    <div class="card shadow-sm mb-3 border-0 border-start border-4 {% if ans.is_correct %}border-success{% else %}border-danger{% endif %}">
+        <div class="card-body">
+            <h6 class="fw-bold">Q{{ forloop.counter }}. {{ ans.question.question_text }}</h6>
+            
+            <div class="ps-3 mt-3">
+                <p class="mb-1">
+                    <span class="text-muted">Your Selection:</span> 
+                    <span class="fw-bold {% if ans.is_correct %}text-success{% else %}text-danger{% endif %}">
+                        {% if ans.selected_option == 1 %}{{ ans.question.option1 }}
+                        {% elif ans.selected_option == 2 %}{{ ans.question.option2 }}
+                        {% elif ans.selected_option == 3 %}{{ ans.question.option3 }}
+                        {% elif ans.selected_option == 4 %}{{ ans.question.option4 }}
+                        {% else %}Skipped{% endif %}
+                    </span>
+                </p>
+
+                {% if not ans.is_correct %}
+                <p class="mb-0">
+                    <span class="text-muted">Correct Answer:</span> 
+                    <span class="text-success fw-bold">
+                        {% if ans.question.correct_option == 1 %}{{ ans.question.option1 }}
+                        {% elif ans.question.correct_option == 2 %}{{ ans.question.option2 }}
+                        {% elif ans.question.correct_option == 3 %}{{ ans.question.option3 }}
+                        {% elif ans.question.correct_option == 4 %}{{ ans.question.option4 }}{% endif %}
+                    </span>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="text-center mt-5 mb-5 d-print-none">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg px-4 me-2">Dashboard</a>
+        <a href="{% url 'leaderboard' result.exam.id %}" class="btn btn-primary btn-1g px-4">View Leaderboard</a>
+    
+        <button onclick="window.print()" class="btn btn-dark btn-lg px-4 ms-2">Print PDF</button>
+    </div>
+</div>
+
+{% endblock %}
+
+
+

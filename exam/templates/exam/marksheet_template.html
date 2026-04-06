@@ -1,0 +1,91 @@
+{% extends 'exam/base.html' %}
+{% block content %}
+<div class="container mt-5 mb-5 no-print text-center">
+    <button onclick="window.print()" class="btn btn-primary shadow-sm">
+        <i class="fas fa-print"></i> Download as PDF
+    </button>
+</div>
+
+<div class="marksheet-container shadow-lg p-5 bg-white mx-auto" id="printable-area" style="max-width: 800px; position: relative; border: 10px double #2c3e50 !important; background-color: #fff;">
+    
+    <div class="text-center mb-4">
+        <h2 class="text-uppercase fw-bold" style="color: #2c3e50;">LuminaExam Management System</h2>
+        <p class="mb-0 text-muted">Official Academic Certificate of Excellence</p>
+        <hr style="border-top: 2px solid #2c3e50;">
+    </div>
+
+    <div class="row mt-4 align-items-center">
+        <div class="col-7">
+            <p><strong>Name:</strong> {{ user.username|upper }}</p>
+            <p><strong>Roll No:</strong> {{ profile.roll_no|default:"---" }}</p>
+            <p><strong>Course:</strong> {{ profile.batch|default:"BCA" }}</p>
+            <p><strong>Session/Year:</strong> {{ profile.year }}</p>
+        </div>
+
+        <div class="col-5 text-end">
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                {% if profile.profile_pic %}
+                    <img src="{{ profile.profile_pic.url }}" alt="Student Photo" style="width: 100px; height: 120px; border: 2px solid #2c3e50; object-fit: cover; margin-bottom: 10px;">
+                {% else %}
+                    <div style="width: 100px; height: 120px; border: 2px dashed #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999;">No Photo</div>
+                {% endif %}
+                <img src="{{ qr_url }}" alt="QR Verification" style="width: 80px; border: 1px solid #eee;">
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-bordered mt-4 text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Subject/Exam</th>
+                <th>Total Marks</th>
+                <th>Obtained</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="height: 50px; vertical-align: middle;">
+                <td class="fw-bold">{{ exam.title }}</td>
+                <td>{{ exam.total_marks }}</td>
+                <td>{{ result.score }}</td>
+                <td>{{ result.percentage }}%</td>
+               
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="row mt-5">
+        <div class="col-6 mt-auto">
+        <p><strong>Result Date:</strong> {{ today }}</p>
+    
+        <p class="fw-bold" style="font-size: 1.2rem;">
+            Status: 
+            {% if result.status|upper == "PASS" %}
+               <span style="color: #28a745;">PASS</span> {% else %}
+               <span style="color: #dc3545;">FAIL</span> {% endif %}
+         </p>
+        </div>
+
+        <div class="col-6 text-end">
+            {% if profile.authority_signature %}
+                <img src="{{ profile.authority_signature.url }}" alt="Authority Signature" style="width: 150px; height: auto; max-height: 70px; margin-bottom: -5px;">
+            {% else %}
+                <div style="height: 70px;"></div> {% endif %}
+            <div class="text-center" style="display: inline-block;">
+                <p class="border-top px-4" style="border-top: 2px solid #2c3e50 !important; font-weight: bold;">Authorized Signatory</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print, .navbar, footer { display: none !important; }
+        body { background: white !important; }
+        .marksheet-container { border: 5px solid black !important; box-shadow: none !important; margin: 0 auto !important; width: 100% !important; }
+    }
+</style>
+{% endblock %}
+
+
+

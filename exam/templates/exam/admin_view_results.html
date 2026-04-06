@@ -1,0 +1,25 @@
+{% extends 'exam/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Results for {{ exam.title }}</h2>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Score</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in results %}
+            <tr>
+                <td>{{ res.user.username }}</td>
+                <td>{{ res.score }}</td>
+                <td>{{ res.status }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'faculty_dashboard' %}" class="btn btn-secondary">Back</a>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'exam/base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-0">
+                <div class="card-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-uppercase tracking-wider">Candidate Instructions - AuraExam v3.0</h5>
+                    <div class="text-end">
+                        <small class="d-block text-muted">Server Time</small>
+                        <span id="server-time" class="fw-bold text-info">--:--:--</span>
+                    </div>
+                </div>
+
+                <div class="card-body p-5">
+                    <div class="row mb-5 text-center bg-light py-4 rounded mx-0 border-start border-primary border-4">
+                        <div class="col-md-4 border-end">
+                            <small class="text-muted d-block">Subject</small>
+                            <span class="fw-bold h5 text-dark">{{ exam.title }}</span>
+                        </div>
+                        <div class="col-md-4 border-end">
+                            <small class="text-muted d-block">Duration</small>
+                            <span class="fw-bold h5 text-dark">{{ exam.duration }} Minutes</span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Questions</small>
+                            <span class="fw-bold h5 text-dark">{{ questions.count }} Items</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-5">
+                        <div class="col-md-7">
+                            <h6 class="fw-bold text-primary mb-3 text-uppercase"><i class="fas fa-file-alt me-2"></i>General Instructions</h6>
+                            <div class="text-muted small">
+                                <p>1. The clock will be set at the server. The countdown timer at the top of your screen will display the remaining time available for you to complete the examination.</p>
+                                <p>2. The "Question Palette" displayed on the right side of the screen will show the status of each question using the following symbols:</p>
+                                <ul class="list-unstyled ms-3">
+                                    <li><span class="badge bg-secondary me-2">0</span> Not Visited</li>
+                                    <li><span class="badge bg-danger me-2">0</span> Visited but Not Answered</li>
+                                    <li><span class="badge bg-success me-2">0</span> Answered & Saved</li>
+                                </ul>
+                                <p>3. You can click on the question number in the palette to navigate directly to that question.</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 border-start">
+                            <h6 class="fw-bold text-danger mb-3 text-uppercase"><i class="fas fa-shield-virus me-2"></i>Security Protocol</h6>
+                            <ul class="list-group list-group-flush small">
+                                <li class="list-group-item bg-transparent px-0">● No negative marking for incorrect attempts.</li>
+                                <li class="list-group-item bg-transparent px-0">● Do not use the browser's "Back" or "Refresh" buttons.</li>
+                                <li class="list-group-item bg-transparent px-0">● Tab switching is strictly monitored and recorded.</li>
+                                <li class="list-group-item bg-transparent px-0">● Auto-submission occurs precisely at T-minus 0 seconds.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 p-4 bg-light border border-secondary border-opacity-25 rounded-0">
+                        <div class="form-check">
+                            <input class="form-check-input border-dark" type="checkbox" id="agreeCheck" style="cursor: pointer;">
+                            <label class="form-check-label ms-2 small fw-bold" for="agreeCheck" style="cursor: pointer;">
+                                I have read and understood all the instructions. I declare that I am not in possession of any prohibited material and I will not use any unfair means during the examination.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg px-5 me-3 rounded-0 small uppercase">Cancel</a>
+                        <a href="{% url 'start_exam' exam.id %}" id="startBtn" class="btn btn-success btn-lg px-5 rounded-0 disabled shadow-sm">
+                            CONFIRM & START EXAM <i class="fas fa-chevron-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white text-muted small text-center py-3 border-top-0">
+                    For technical support, contact the system administrator. Session ID: {{ user.id }}{{ exam.id }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body { background-color: #f4f7f6; }
+    .card { border-top: 5px solid #0d6efd !important; }
+    .tracking-wider { letter-spacing: 1px; }
+    .btn-lg { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.5px; }
+    .btn.disabled { cursor: not-allowed; opacity: 0.4; }
+    #server-time { font-family: 'Courier New', Courier, monospace; letter-spacing: 1px; }
+</style>
+
+<script>
+    // 1. Live Server Clock Simulation
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('server-time').innerText = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Button Activation Logic
+    const agreeCheck = document.getElementById('agreeCheck');
+    const startBtn = document.getElementById('startBtn');
+
+    agreeCheck.addEventListener('change', function() {
+        if (this.checked) {
+            startBtn.classList.remove('disabled');
+        } else {
+            startBtn.classList.add('disabled');
+        }
+    });
+</script>
+{% endblock %}
+
